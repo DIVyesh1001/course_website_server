@@ -41,6 +41,7 @@ app.post('/create-order', async (req, res) => {
 });
 
 // ✅ POST /verify-payment
+// ✅ POST /verify-payment
 app.post('/verify-payment', async (req, res) => {
   const {
     razorpay_order_id,
@@ -48,23 +49,36 @@ app.post('/verify-payment', async (req, res) => {
     razorpay_signature,
     userEmail,
     userName = 'Customer',
+    userPhone,
+    userLinkedIn,
   } = req.body;
 
-  if (!userEmail) {
-    return res.status(400).json({ status: 'failure', error: 'Email required' });
+  if (!userEmail || !userName || !userPhone || !userLinkedIn) {
+    return res.status(400).json({
+      status: 'failure',
+      error: 'Missing user details (name, email, phone, LinkedIn)',
+    });
   }
 
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  const body = razorpay_order_id + '|' + razorpay_payment_id;
   const expectedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY)
     .update(body.toString())
     .digest('hex');
 
   if (expectedSignature === razorpay_signature) {
-    // ✅ Payment verified
-    console.log('✅ Verified:', razorpay_payment_id);
+    console.log('✅ Verified payment:', razorpay_payment_id);
 
-    // Send confirmation email
+    // Optionally: log or store full user info here
+    console.table({
+      Name: userName,
+      Email: userEmail,
+      Phone: userPhone,
+      LinkedIn: userLinkedIn,
+      PaymentID: razorpay_payment_id,
+    });
+
+    // Email setup
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -76,13 +90,18 @@ app.post('/verify-payment', async (req, res) => {
     const mailOptions = {
       from: `"Your Brand" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: '🎉 Payment Successful',
+      subject: '🎉 Payment Successful – Access Granted',
       html: `
         <h2>Hello ${userName},</h2>
-        <p>Thank you for your payment.</p>
+        <p>Thank you for purchasing the course!</p>
         <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
-        <p>If you have any questions, reply to this email.</p>
-        <br>
+        <hr />
+        <p><strong>Phone:</strong> ${userPhone}</p>
+        <p><strong>LinkedIn:</strong> <a href="${userLinkedIn}" target="_blank">${userLinkedIn}</a></p>
+        <br />
+        <p>You now have lifetime access to the course materials.</p>
+        <p>Feel free to reach out if you have any questions.</p>
+        <br />
         <p>– Your Team</p>
       `,
     };
@@ -100,6 +119,7 @@ app.post('/verify-payment', async (req, res) => {
     res.status(400).json({ status: 'failure', error: 'Invalid signature' });
   }
 });
+
 
 // 🟢 Start Server
 const PORT = process.env.PORT || 4000;
