@@ -41,7 +41,6 @@ app.post('/create-order', async (req, res) => {
 });
 
 // ✅ POST /verify-payment
-// ✅ POST /verify-payment
 app.post('/verify-payment', async (req, res) => {
   const {
     razorpay_order_id,
@@ -88,23 +87,37 @@ app.post('/verify-payment', async (req, res) => {
     });
 
     const mailOptions = {
-      from: `"Your Brand" <${process.env.EMAIL_USER}>`,
+      from: `"Commercify360" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: '🎉 Payment Successful – Access Granted',
+      subject: '🎉 You’re In! Welcome to the Amazon Ads Masterclass',
       html: `
-        <h2>Hello ${userName},</h2>
-        <p>Thank you for purchasing the course!</p>
-        <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
-        <hr />
-        <p><strong>Phone:</strong> ${userPhone}</p>
-        <p><strong>LinkedIn:</strong> <a href="${userLinkedIn}" target="_blank">${userLinkedIn}</a></p>
-        <br />
-        <p>You now have lifetime access to the course materials.</p>
-        <p>Feel free to reach out if you have any questions.</p>
-        <br />
-        <p>– Your Team</p>
-      `,
+    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 16px;">
+      <h2 style="color: #0f9d58;">🎉 You’re In!</h2>
+      <p>Thanks for registering for the <strong>Amazon Ads Masterclass</strong> with <strong>Commercify360</strong>.</p>
+
+      <p>Your learning journey is about to begin. Get ready to unlock proven strategies to scale your brand on Amazon with data-backed advertising, expert insights, and hands-on guidance.</p>
+
+      <h3>✅ What Happens Next:</h3>
+      <ul>
+        <li><strong>Course Access Details:</strong> You’ll receive an email shortly with your login credentials and session calendar.</li>
+        <li><strong>Join the Community:</strong> Look out for an invite to our exclusive WhatsApp group — connect with peers, ask questions, and stay updated.</li>
+        <li><strong>Prepare to Learn:</strong> Check your inbox for tips on how to get the most from this course.</li>
+      </ul>
+
+      <h3>🚀 What You’ll Learn:</h3>
+      <ul>
+        <li>How to leverage Amazon Ads for growth across Sponsored Products, Brands, Display, DSP, and Sponsored TV</li>
+        <li>Practical strategies for targeting, bidding, and scaling campaigns</li>
+        <li>Real-world insights from 200+ brands and millions in ad spend managed</li>
+      </ul>
+
+      <p>If you have any questions, feel free to reach out at <a href="mailto:support@commercify360.com">support@commercify360.com</a>.</p>
+
+      <p style="margin-top: 24px;">See you in class!<br><strong>— The Commercify360 Team</strong></p>
+    </div>
+  `,
     };
+
 
     try {
       await transporter.sendMail(mailOptions);
@@ -120,9 +133,9 @@ app.post('/verify-payment', async (req, res) => {
   }
 });
 
-
 // 🟢 Start Server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
