@@ -3,7 +3,7 @@ const Razorpay = require('razorpay');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const brevo = require('@getbrevo/brevo');
 
 dotenv.config();
 const app = express();
@@ -16,6 +16,13 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_SECRET_KEY,
 });
+
+// Brevo instance
+const emailAPI = new brevo.TransactionalEmailsApi();
+emailAPI.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 // 📦 POST /create-order
 app.post('/create-order', async (req, res) => {
@@ -68,7 +75,7 @@ app.post('/verify-payment', async (req, res) => {
   if (expectedSignature === razorpay_signature) {
     console.log('✅ Verified payment:', razorpay_payment_id);
 
-    // Optionally: log or store full user info here
+    // Optionally log user info
     console.table({
       Name: userName,
       Email: userEmail,
@@ -77,53 +84,42 @@ app.post('/verify-payment', async (req, res) => {
       PaymentID: razorpay_payment_id,
     });
 
-    // Email setup
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Commercify360" <${process.env.EMAIL_USER}>`,
-      to: userEmail,
+    const emailData = {
+      to: [{ email: userEmail, name: userName }],
+      sender: { name: 'Commercify360', email: process.env.BREVO_SENDER },
       subject: '🎉 You’re In! Welcome to the Amazon Ads Masterclass',
-      html: `
-    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 16px;">
-      <h2 style="color: #0f9d58;">🎉 You’re In!</h2>
-      <p>Thanks for registering for the <strong>Amazon Ads Masterclass</strong> with <strong>Commercify360</strong>.</p>
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 16px;">
+          <h2 style="color: #0f9d58;">🎉 You’re In!</h2>
+          <p>Thanks for registering for the <strong>Amazon Ads Masterclass</strong> with <strong>Commercify360</strong>.</p>
+          <p>Your learning journey is about to begin. Get ready to unlock proven strategies to scale your brand on Amazon with data-backed advertising, expert insights, and hands-on guidance.</p>
 
-      <p>Your learning journey is about to begin. Get ready to unlock proven strategies to scale your brand on Amazon with data-backed advertising, expert insights, and hands-on guidance.</p>
+          <h3>✅ What Happens Next:</h3>
+          <ul>
+            <li><strong>Course Access Details:</strong> You’ll receive an email shortly with your login credentials and session calendar.</li>
+            <li><strong>Join the Community:</strong> Look out for an invite to our exclusive WhatsApp group — connect with peers, ask questions, and stay updated.</li>
+            <li><strong>Prepare to Learn:</strong> Check your inbox for tips on how to get the most from this course.</li>
+          </ul>
 
-      <h3>✅ What Happens Next:</h3>
-      <ul>
-        <li><strong>Course Access Details:</strong> You’ll receive an email shortly with your login credentials and session calendar.</li>
-        <li><strong>Join the Community:</strong> Look out for an invite to our exclusive WhatsApp group — connect with peers, ask questions, and stay updated.</li>
-        <li><strong>Prepare to Learn:</strong> Check your inbox for tips on how to get the most from this course.</li>
-      </ul>
+          <h3>🚀 What You’ll Learn:</h3>
+          <ul>
+            <li>How to leverage Amazon Ads for growth across Sponsored Products, Brands, Display, DSP, and Sponsored TV</li>
+            <li>Practical strategies for targeting, bidding, and scaling campaigns</li>
+            <li>Real-world insights from 200+ brands and millions in ad spend managed</li>
+          </ul>
 
-      <h3>🚀 What You’ll Learn:</h3>
-      <ul>
-        <li>How to leverage Amazon Ads for growth across Sponsored Products, Brands, Display, DSP, and Sponsored TV</li>
-        <li>Practical strategies for targeting, bidding, and scaling campaigns</li>
-        <li>Real-world insights from 200+ brands and millions in ad spend managed</li>
-      </ul>
-
-      <p>If you have any questions, feel free to reach out at <a href="mailto:support@commercify360.com">support@commercify360.com</a>.</p>
-
-      <p style="margin-top: 24px;">See you in class!<br><strong>— The Commercify360 Team</strong></p>
-    </div>
-  `,
+          <p>If you have any questions, feel free to reach out at <a href="mailto:support@commercify360.com">support@commercify360.com</a>.</p>
+          <p style="margin-top: 24px;">See you in class!<br><strong>— The Commercify360 Team</strong></p>
+        </div>
+      `,
+      replyTo: { email: 'support@commercify360.com', name: 'Support' },
     };
 
-
     try {
-      await transporter.sendMail(mailOptions);
-      console.log('📧 Email sent to', userEmail);
-    } catch (err) {
-      console.error('📛 Email error:', err.message);
+      await emailAPI.sendTransacEmail(emailData);
+      console.log('📧 Confirmation email sent to', userEmail);
+    } catch (error) {
+      console.error('📛 Brevo email error:', error.response?.body || error.message);
     }
 
     res.json({ status: 'success' });
@@ -138,4 +134,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
-
