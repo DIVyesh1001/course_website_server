@@ -90,7 +90,7 @@ app.post('/verify-payment', async (req, res) => {
       subject: '🎉 You’re In! Welcome to the Amazon Ads Masterclass',
       htmlContent: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 16px;">
-          <h2 style="color: #0f9d58;">🎉 You’re In!</h2>
+          <h2 style="color: #0f9d58;">🎉 Hi ${userName}</h2>
           <p>Thanks for registering for the <strong>Amazon Ads Masterclass</strong> with <strong>Commercify360</strong>.</p>
           <p>Your learning journey is about to begin. Get ready to unlock proven strategies to scale your brand on Amazon with data-backed advertising, expert insights, and hands-on guidance.</p>
 
