@@ -8,7 +8,10 @@ const brevo = require('@getbrevo/brevo');
 dotenv.config();
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://courses.commercify360.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE']
+}));
 app.use(express.json());
 
 // Razorpay instance
