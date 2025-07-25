@@ -10,7 +10,8 @@ const app = express();
 
 app.use(cors({
   origin: 'https://courses.commercify360.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-key'],
 }));
 app.use(express.json());
 
